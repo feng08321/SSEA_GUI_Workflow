@@ -1,0 +1,14 @@
+{
+  "Name": "Spectrum_ISO24871_GHI_Test_Etest_Normalized_v1.0",
+  "Category": "Example",
+  "Source": "ISO24871 GHI Test normalized Etest",
+  "Unit": "1/nm",
+  "Version": "v1.0",
+  "Date": "2026-06-23",
+  "OriginalWorkbook": "24871-6-datacal-20260401.xlsx",
+  "OriginalSheet": "sp-ghi-test",
+  "OriginalColumns": "A + 32",
+  "Processing": "Extracted from Excel normalized/calculation column; not treated as raw database input.",
+  "Description": "Normalized spectrum from Excel for verification only.",
+  "Remark": "Generated for Solar Spectral Error Analyzer (SSEA) database."
+}

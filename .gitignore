@@ -1,0 +1,22 @@
+# MATLAB 临时文件
+*.asv
+*.m~
+*.mat
+*.mex*
+
+# 运行输出（程序自动创建）
+Results/
+
+# 旧版本（仅本地保留，不发布）
+SSEA_GUI_Workflow_v0_*.m
+Run_GUI_v0_*.m
+Run_GUI_v1_0_beta.m
+Run_GUI_v1_0_beta2.m
+README_GUI_v0.*.md
+README_GUI_v1.0_beta.md
+README_GUI_v1.0_beta2.md
+README_GUI_v1.0_beta3.md
+
+# 系统文件
+Thumbs.db
+.DS_Store

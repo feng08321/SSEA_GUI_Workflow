@@ -1,0 +1,14 @@
+{
+  "Name": "Example_ISO24871_DNI_Excel_Contribution_v1.0",
+  "Category": "Example",
+  "Source": "Excel DNI calculation example",
+  "Unit": "mixed",
+  "Version": "v1.0",
+  "Date": "2026-06-23",
+  "OriginalWorkbook": "24871-6-datacal-20260401.xlsx",
+  "OriginalSheet": "spetral error dni",
+  "OriginalColumns": "A,E,O,Y",
+  "Processing": "Extracted from Excel calculation columns; not treated as raw database input.",
+  "Description": "Extracted normalized-difference, contribution, and cumulative-contribution columns for verification only.",
+  "Remark": "Generated for Solar Spectral Error Analyzer (SSEA) database."
+}

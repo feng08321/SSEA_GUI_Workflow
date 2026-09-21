@@ -1,0 +1,14 @@
+{
+  "Name": "Coating_Acktar_MetalVelvet_HR_v1.0",
+  "Category": "Coating",
+  "Source": "Excel acktar_metal_velvet_coating_HR",
+  "Unit": "raw",
+  "Version": "v1.0",
+  "Date": "2026-06-23",
+  "OriginalWorkbook": "24871-6-datacal-20260401.xlsx",
+  "OriginalSheet": "spectral responsitivity",
+  "OriginalColumns": "G:H",
+  "Processing": "Wavelength converted µm→nm; values otherwise unchanged.",
+  "Description": "Acktar metal velvet coating HR curve. Wavelength converted from µm to nm. Value unit retained as raw because physical meaning needs confirmation.",
+  "Remark": "Generated for Solar Spectral Error Analyzer (SSEA) database."
+}

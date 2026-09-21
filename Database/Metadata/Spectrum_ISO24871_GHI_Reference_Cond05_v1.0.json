@@ -1,0 +1,14 @@
+{
+  "Name": "Spectrum_ISO24871_GHI_Reference_Cond05_v1.0",
+  "Category": "Spectrum",
+  "Source": "ISO24871 GHI Reference condition 05",
+  "Unit": "W/m²/nm",
+  "Version": "v1.0",
+  "Date": "2026-06-23",
+  "OriginalWorkbook": "24871-6-datacal-20260401.xlsx",
+  "OriginalSheet": "sp-ghi-ref",
+  "OriginalColumns": "A + 6",
+  "Processing": "Extracted from Excel cached values.",
+  "Description": "GHI Reference spectral irradiance condition 05.",
+  "Remark": "Generated for Solar Spectral Error Analyzer (SSEA) database."
+}

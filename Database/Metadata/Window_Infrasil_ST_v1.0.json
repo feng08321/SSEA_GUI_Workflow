@@ -1,0 +1,14 @@
+{
+  "Name": "Window_Infrasil_ST_v1.0",
+  "Category": "Window",
+  "Source": "Excel infrasil_window_ST",
+  "Unit": "0-1",
+  "Version": "v1.0",
+  "Date": "2026-06-23",
+  "OriginalWorkbook": "24871-6-datacal-20260401.xlsx",
+  "OriginalSheet": "spectral responsitivity",
+  "OriginalColumns": "J:K",
+  "Processing": "Original percentage values divided by 100.",
+  "Description": "Infrasil window transmittance. Original values appear to be percent and were divided by 100.",
+  "Remark": "Generated for Solar Spectral Error Analyzer (SSEA) database."
+}
