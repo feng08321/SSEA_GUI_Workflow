@@ -4,7 +4,7 @@ function SSEA_GUI_Workflow_v1_0_beta()
 
 app=struct(); app.Result=[]; app.InputAccepted=false; app.DatabaseRoot='';
 
-app.Fig=uifigure('Name','SSEA Workflow GUI v1.0-beta3','Position',[40 30 1480 860]);
+app.Fig=uifigure('Name','SSEA Workflow GUI v1.0-beta10','Position',[40 30 1480 860]);
 
 g=uigridlayout(app.Fig,[3 3]);
 g.RowHeight={64,36,'1x'};
@@ -102,8 +102,7 @@ app.tabBatch = uitab(app.displayTabs,'Title','Batch');
 batchGrid=uigridlayout(app.tabBatch,[2 2]); batchGrid.RowHeight={'1x','1x'}; batchGrid.ColumnWidth={'1x','1x'};
 app.axBatch1=uiaxes(batchGrid); app.axBatch1.Layout.Row=1; app.axBatch1.Layout.Column=[1 2]; title(app.axBatch1,'Batch CSSE sequence'); grid(app.axBatch1,'on');
 app.axBatch2=uiaxes(batchGrid); app.axBatch2.Layout.Row=2; app.axBatch2.Layout.Column=1; title(app.axBatch2,'Worst-case CSSE'); grid(app.axBatch2,'on');
-app.tblBatchMain=uitable(batchGrid); app.tblBatchMain.Layout.Row=2; app.tblBatchMain.Layout.Column=2;
-app.tblBatchMain.ColumnName={'Label','CSSE %','Ratio %'}; app.tblBatchMain.Data={};
+app.axBatch3=uiaxes(batchGrid); app.axBatch3.Layout.Row=2; app.axBatch3.Layout.Column=2; title(app.axBatch3,'CSSE heatmap'); grid(app.axBatch3,'on');
 
 app.tabBand = uitab(app.displayTabs,'Title','Band Contribution');
 bandGrid=uigridlayout(app.tabBand,[2 2]); bandGrid.RowHeight={'1x','1x'}; bandGrid.ColumnWidth={'1x','1x'};
@@ -122,7 +121,7 @@ rightOuterGrid.Padding=[2 2 2 2];
 app.summaryTabs = uitabgroup(rightOuterGrid);
 
 app.tabSummary = uitab(app.summaryTabs,'Title','Summary');
-rg=uigridlayout(app.tabSummary,[24 2]); rg.RowHeight=repmat({22},1,24); rg.ColumnWidth={112,'1x'};
+rg=uigridlayout(app.tabSummary,[30 2]); rg.RowHeight=repmat({22},1,30); rg.ColumnWidth={112,'1x'};
 
 uilabel(rg,'Text','Current Analysis','FontWeight','bold'); uilabel(rg,'Text','');
 uilabel(rg,'Text','Mode'); app.lblAnalysisMode=uilabel(rg,'Text','Idle');
@@ -146,6 +145,11 @@ uilabel(rg,'Text','10 nm Positive'); app.lblBandPos=uilabel(rg,'Text','-');
 uilabel(rg,'Text','10 nm Negative'); app.lblBandNeg=uilabel(rg,'Text','-');
 
 uilabel(rg,'Text','Last Export'); app.lblExport=uilabel(rg,'Text','');
+
+uilabel(rg,'Text','Transform Check','FontWeight','bold'); uilabel(rg,'Text','');
+uilabel(rg,'Text','Raw min/max'); app.lblRawRange=uilabel(rg,'Text','-');
+uilabel(rg,'Text','Converted min/max'); app.lblTransRange=uilabel(rg,'Text','-');
+uilabel(rg,'Text','Prepared min/max'); app.lblPrepRange=uilabel(rg,'Text','-');
 
 app.tabBatchTable = uitab(app.summaryTabs,'Title','Batch Table');
 btg=uigridlayout(app.tabBatchTable,[1 1]);
@@ -220,12 +224,12 @@ end
 
             clearAllDisplayAxes();
         if isfield(app,'tblBatch'), app.tblBatch.Data={}; end
-        if isfield(app,'tblBatchMain'), app.tblBatchMain.Data={}; end
+        
         if isfield(app,'tblBand10'), app.tblBand10.Data={}; end
         if isfield(app,'tblBand100'), app.tblBand100.Data={}; end
             if isfield(app,'tabPre'), app.displayTabs.SelectedTab = app.tabPre; end
+            resetPreAxes();
             app.ax1=app.axPre1; app.ax2=app.axPre2; app.ax3=app.axPre3; app.ax4=app.axPre4;
-            ResetAxesClean(app.ax1); ResetAxesClean(app.ax2); ResetAxesClean(app.ax3); ResetAxesClean(app.ax4);
             set([app.ax1 app.ax2 app.ax3 app.ax4],'Visible','on');
 
             plot(app.ax1,ref.lambda_nm,ref.value,'DisplayName','Reference','LineWidth',1.0); hold(app.ax1,'on');
@@ -234,17 +238,15 @@ end
 
             if ~isempty(cfg.detectorFile)
                 det=PrepareSpectralFunction(cfg.detectorFile,lambda,cfg.detectorTransform,0);
-                if strcmp(app.ddYScale.Value,'log')
-                    semilogy(app.ax2,det.raw_wavelength_nm,max(det.raw_value,eps),'o-','DisplayName','Raw'); hold(app.ax2,'on');
-                    semilogy(app.ax2,det.raw_wavelength_nm,max(det.transformed_value,eps),'s-','DisplayName','Transformed');
-                    semilogy(app.ax2,det.lambda_nm,max(det.value,eps),'-','DisplayName','Prepared');
+                plotDetectorTransformValidation(app.ax2, det, cfg);
+                updateTransformCheck(det, cfg);
+                if isfield(app,'outputFolder')
+                    debugOutputFolder = app.outputFolder;
                 else
-                    plot(app.ax2,det.raw_wavelength_nm,det.raw_value,'o-','DisplayName','Raw'); hold(app.ax2,'on');
-                    plot(app.ax2,det.raw_wavelength_nm,det.transformed_value,'s-','DisplayName','Transformed');
-                    plot(app.ax2,det.lambda_nm,det.value,'-','DisplayName','Prepared');
+                    debugOutputFolder = fullfile(pwd,'Result');
+                    if ~exist(debugOutputFolder,'dir'), mkdir(debugOutputFolder); end
                 end
-                hold(app.ax2,'off'); xlabel(app.ax2,'Wavelength (nm)'); ylabel(app.ax2,'Value');
-                title(app.ax2,'Detector / absorber preprocessing'); legend(app.ax2,'Location','best'); grid(app.ax2,'on');
+                exportDetectorDebug(det, cfg, debugOutputFolder);
                 Rsys=det.value;
                 app.lblAnalysisMode.Text='Preprocess'; if det.qc.hasNaN_prepared||det.qc.hasNegative_prepared, app.lblAnalysisMode.Text='Preprocess WARN'; end
             else
@@ -307,8 +309,8 @@ end
         try
             cfg=buildConfig(); app.Result=CalculateSpectralError(cfg); R=app.Result;
             if isfield(app,'tabCalc'), app.displayTabs.SelectedTab = app.tabCalc; end
+            resetCalcAxes();
             app.ax1=app.axCalc1; app.ax2=app.axCalc2; app.ax3=app.axCalc3; app.ax4=app.axCalc4;
-            ResetAxesClean(app.ax1); ResetAxesClean(app.ax2); ResetAxesClean(app.ax3); ResetAxesClean(app.ax4);
             plot(app.ax1,R.lambda_nm,R.Eref,'DisplayName','Reference','LineWidth',1.0); hold(app.ax1,'on'); plot(app.ax1,R.lambda_nm,R.Etest,'DisplayName','Test','LineWidth',1.0); hold(app.ax1,'off'); xlabel(app.ax1,'Wavelength (nm)'); ylabel(app.ax1,'Irradiance'); title(app.ax1,'Prepared spectra'); legend(app.ax1,'Location','best'); grid(app.ax1,'on');
             PlotResponseContributionOverlay(R, app.ax2);
             cla(app.ax3); plot(app.ax3,R.lambda_nm,R.Contribution,'DisplayName','Contribution','LineWidth',1.0); xlabel(app.ax3,'Wavelength (nm)'); ylabel(app.ax3,'Contribution'); title(app.ax3,sprintf('Contribution Function, CSSE = %.4f%%',R.CSSE_percent)); grid(app.ax3,'on');
@@ -363,8 +365,9 @@ end
             BatchResult=RunBatchCurrentConfig(cfg, app.DatabaseRoot);
             app.BatchResult=BatchResult;
             if isfield(app,'tabBatch'), app.displayTabs.SelectedTab = app.tabBatch; end
-            ResetAxesClean(app.axBatch1); ResetAxesClean(app.axBatch2);
+            resetBatchAxes();
             PlotBatchResult(BatchResult, app.axBatch1, app.axBatch2);
+            PlotBatchHeatmap(BatchResult, app.axBatch3);
             S=BatchResult.Summary;
             app.lblAnalysisMode.Text='Batch18';
             app.lblSpectrumMode.Text='GHI + DNI';
@@ -380,7 +383,9 @@ end
             Tb=MakeBatchSummaryTable(BatchResult);
             batchData=[cellstr(Tb.Label), num2cell(Tb.CSSE_percent), num2cell(Tb.RatioError_percent)];
             app.tblBatch.Data=batchData;
-            if isfield(app,'tblBatchMain'), if isfield(app,'tblBatchMain'), app.tblBatchMain.Data=batchData; end end
+            if isfield(app,'tblBatchMain')
+                app.tblBatchMain.Data=batchData;
+            end
             msg=sprintf('Batch finished. %s max=%.4f%%, %s max=%.4f%%.', S.Mode{1}, S.MaxAbsCSSE_percent(1), S.Mode{2}, S.MaxAbsCSSE_percent(2));
             logmsg(msg);
             out=fullfile(pwd,'Result');
@@ -441,7 +446,7 @@ end
             app.BandResult100 = CalculateBandContribution(app.Result, 100, 'fixed');
 
             if isfield(app,'tabBand'), app.displayTabs.SelectedTab = app.tabBand; end
-            ResetAxesClean(app.axBand1); ResetAxesClean(app.axBand2); ResetAxesClean(app.axBand3);
+            resetBandAxes();
             PlotResponseContributionOverlay(app.Result, app.axBand1);
             PlotBandContribution(app.BandResult10, app.axBand2);
             PlotBandContribution(app.BandResult100, app.axBand3);
@@ -478,7 +483,7 @@ end
     end
 
     function clearAllDisplayAxes()
-        axNames = {'axPre1','axPre2','axPre3','axPre4','axCalc1','axCalc2','axCalc3','axCalc4','axBatch1','axBatch2','axBand1','axBand2','axBand3','ax1','ax2','ax3','ax4'};
+        axNames = {'axPre1','axPre2','axPre3','axPre4','axCalc1','axCalc2','axCalc3','axCalc4','axBatch1','axBatch2','axBatch3','axBand1','axBand2','axBand3','ax1','ax2','ax3','ax4'};
         for ii = 1:numel(axNames)
             nm = axNames{ii};
             if isfield(app,nm) && isvalid(app.(nm))
@@ -491,11 +496,11 @@ end
         app.Result=[]; app.PreparedReview=[]; app.BatchResult=[]; app.BandResult10=[]; app.BandResult100=[]; resetAcceptance(); app.lblAnalysisMode.Text='Idle'; setStep('Input');
         app.edCSSE.Value=0; app.edRatio.Value=0; app.edPos.Value=0; app.edNeg.Value=0; app.edCR.Value=0;
         app.lblAnalysisMode.Text='Idle'; app.lblSpectrumMode.Text='-'; app.lblCondition.Text='-';
-        app.lblWorstGHI.Text='-'; app.lblWorstDNI.Text='-'; app.lblBandPos.Text='-'; app.lblBandNeg.Text='-';
+        app.lblWorstGHI.Text='-'; app.lblWorstDNI.Text='-'; app.lblBandPos.Text='-'; app.lblBandNeg.Text='-'; if isfield(app,'lblRawRange'), app.lblRawRange.Text='-'; app.lblTransRange.Text='-'; app.lblPrepRange.Text='-'; end;
         app.tblBatch.Data={};
         clearAllDisplayAxes();
         if isfield(app,'tblBatch'), app.tblBatch.Data={}; end
-        if isfield(app,'tblBatchMain'), app.tblBatchMain.Data={}; end
+        
         if isfield(app,'tblBand10'), app.tblBand10.Data={}; end
         if isfield(app,'tblBand100'), app.tblBand100.Data={}; end
         title(app.ax1,'Prepared spectra'); title(app.ax2,'Detector / absorber preprocessing'); title(app.ax3,'Component transmission curves'); title(app.ax4,'Final system response / cumulative');
@@ -545,6 +550,146 @@ end
             case 'Calculation', app.stepCalc.FontWeight='bold'; app.stepCalc.Text='▶ ⑤ Calculation';
             case 'Export', app.stepExport.FontWeight='bold'; app.stepExport.Text='▶ ⑥ Export';
         end
+    end
+
+
+    function axNew = recreateAxes(parentGrid, oldAx, row, col, titleText)
+        try
+            delete(oldAx);
+        catch
+        end
+        axNew = uiaxes(parentGrid);
+        axNew.Layout.Row = row;
+        axNew.Layout.Column = col;
+        title(axNew,titleText);
+        grid(axNew,'on');
+    end
+
+    function resetPreAxes()
+        app.axPre1 = recreateAxes(preGrid, app.axPre1, 1, 1, 'Prepared spectra');
+        app.axPre2 = recreateAxes(preGrid, app.axPre2, 1, 2, 'Detector / absorber preprocessing');
+        app.axPre3 = recreateAxes(preGrid, app.axPre3, 2, 1, 'Component transmission curves');
+        app.axPre4 = recreateAxes(preGrid, app.axPre4, 2, 2, 'Final system response');
+    end
+
+    function resetCalcAxes()
+        app.axCalc1 = recreateAxes(calcGrid, app.axCalc1, 1, 1, 'Prepared spectra');
+        app.axCalc2 = recreateAxes(calcGrid, app.axCalc2, 1, 2, 'System response & contribution');
+        app.axCalc3 = recreateAxes(calcGrid, app.axCalc3, 2, 1, 'Contribution Function');
+        app.axCalc4 = recreateAxes(calcGrid, app.axCalc4, 2, 2, 'Cumulative contribution');
+    end
+
+    function resetBandAxes()
+        app.axBand1 = recreateAxes(bandGrid, app.axBand1, 1, [1 2], 'System response & contribution');
+        app.axBand2 = recreateAxes(bandGrid, app.axBand2, 2, 1, 'Band Contribution, 10 nm');
+        app.axBand3 = recreateAxes(bandGrid, app.axBand3, 2, 2, 'Band Contribution, 100 nm');
+    end
+
+    function resetBatchAxes()
+        app.axBatch1 = recreateAxes(batchGrid, app.axBatch1, 1, [1 2], 'Batch CSSE sequence');
+        app.axBatch2 = recreateAxes(batchGrid, app.axBatch2, 2, 1, 'Worst-case CSSE');
+        app.axBatch3 = recreateAxes(batchGrid, app.axBatch3, 2, 2, 'CSSE heatmap');
+    end
+
+
+    function exportDetectorDebug(det, cfg, outputFolder)
+        try
+            if nargin < 3 || isempty(outputFolder)
+                outputFolder = fullfile(pwd,'Result');
+            end
+            if isempty(outputFolder) || ~exist(outputFolder,'dir')
+                outputFolder = fullfile(pwd,'Result');
+                if ~exist(outputFolder,'dir'), mkdir(outputFolder); end
+            end
+
+            rawDisplay = det.raw_value;
+            rawUnit = "ratio";
+            if contains(lower(cfg.detectorTransform),'percent')
+                rawDisplay = det.raw_value ./ 100;
+                rawUnit = "percent_as_ratio";
+            end
+
+            Traw = table(det.raw_wavelength_nm(:), det.raw_value(:), rawDisplay(:), det.transformed_value(:), ...
+                'VariableNames', {'lambda_nm','raw_value','raw_display_value','transformed_value'});
+            Tprep = table(det.lambda_nm(:), det.value(:), ...
+                'VariableNames', {'lambda_nm','prepared_value'});
+
+            writetable(Traw, fullfile(outputFolder,'Debug_DetectorTransform_RawTransformed.csv'));
+            writetable(Tprep, fullfile(outputFolder,'Debug_DetectorTransform_Prepared.csv'));
+
+            fid = fopen(fullfile(outputFolder,'Debug_DetectorTransform_Info.txt'),'w');
+            fprintf(fid,'detectorFile=%s\n', cfg.detectorFile);
+            fprintf(fid,'detectorTransform=%s\n', cfg.detectorTransform);
+            fprintf(fid,'rawUnitForDisplay=%s\n', rawUnit);
+            fprintf(fid,'raw_min=%g\nraw_max=%g\n', min(det.raw_value), max(det.raw_value));
+            fprintf(fid,'transformed_min=%g\ntransformed_max=%g\n', min(det.transformed_value), max(det.transformed_value));
+            fprintf(fid,'prepared_min=%g\nprepared_max=%g\n', min(det.value), max(det.value));
+            fclose(fid);
+        catch ME
+            warning('Debug detector transform export failed: %s', ME.message);
+        end
+    end
+
+    function updateTransformCheck(det, cfg)
+        try
+            rawText = sprintf('%.4g / %.4g', min(det.raw_value), max(det.raw_value));
+            if contains(lower(cfg.detectorTransform),'percent')
+                rawText = sprintf('%.4g / %.4g %%', min(det.raw_value), max(det.raw_value));
+            end
+            app.lblRawRange.Text = rawText;
+            app.lblTransRange.Text = sprintf('A %.5g / %.5g', min(det.transformed_value), max(det.transformed_value));
+            app.lblPrepRange.Text = sprintf('Rsys %.5g / %.5g', min(det.value), max(det.value));
+        catch
+        end
+    end
+
+    function plotDetectorTransformValidation(ax, det, cfg)
+        % Detector / absorber transform validation.
+        % Do NOT call ResetAxesClean here, because ResetAxesClean touches yyaxis
+        % and may leave an unwanted right-side axis in UIAxes.
+        cla(ax);
+        ax.XScale = 'linear';
+        ax.YScale = 'linear';
+        ax.XLimMode = 'auto';
+        ax.YLimMode = 'auto';
+
+        transformName = lower(cfg.detectorTransform);
+        rawDisplay = det.raw_value;
+        rawLabel = 'Raw';
+
+        if contains(transformName,'percent')
+            rawDisplay = det.raw_value ./ 100;
+            rawLabel = 'Raw reflectance / 100';
+        end
+
+        plot(ax, det.raw_wavelength_nm, rawDisplay, 'o-', ...
+            'DisplayName', rawLabel, 'LineWidth', 0.9);
+        hold(ax,'on');
+        plot(ax, det.raw_wavelength_nm, det.transformed_value, 's-', ...
+            'DisplayName', 'Converted absorptance', 'LineWidth', 1.0);
+        plot(ax, det.lambda_nm, det.value, '-', ...
+            'DisplayName', 'Prepared response', 'LineWidth', 1.2);
+        hold(ax,'off');
+
+        xlabel(ax,'Wavelength (nm)');
+        ylabel(ax,'Reflectance / Absorptance / Response');
+        grid(ax,'on');
+
+        if strcmp(transformName,'reflectance_percent_to_absorptance')
+            title(ax,'Detector / absorber transform validation: A = 1 - R/100');
+            try
+                ymin = min([rawDisplay(:); det.transformed_value(:); det.value(:)]);
+                ymax = max([rawDisplay(:); det.transformed_value(:); det.value(:)]);
+                ylim(ax,[max(0,ymin-0.05), min(1.05,ymax+0.05)]);
+            catch
+            end
+        elseif strcmp(transformName,'reflectance_to_absorptance')
+            title(ax,'Detector / absorber transform validation: A = 1 - R');
+        else
+            title(ax,'Detector / absorber transform validation');
+        end
+
+        legend(ax,'Location','best');
     end
 
     function logmsg(msg)

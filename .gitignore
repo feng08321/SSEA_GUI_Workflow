@@ -12,10 +12,15 @@ SSEA_GUI_Workflow_v0_*.m
 Run_GUI_v0_*.m
 Run_GUI_v1_0_beta.m
 Run_GUI_v1_0_beta2.m
+Run_GUI_v1_0_beta3.m
+Run_GUI_v1_0_beta4.m
+Run_GUI_v1_0_beta5.m
+Run_GUI_v1_0_beta6.m
+Run_GUI_v1_0_beta7.m
+Run_GUI_v1_0_beta8.m
+Run_GUI_v1_0_beta9.m
 README_GUI_v0.*.md
-README_GUI_v1.0_beta.md
-README_GUI_v1.0_beta2.md
-README_GUI_v1.0_beta3.md
+README_GUI_v1.0_beta*.md
 
 # 系统文件
 Thumbs.db

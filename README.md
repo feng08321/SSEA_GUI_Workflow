@@ -16,10 +16,10 @@ A MATLAB GUI application for evaluating the clear-sky spectral error of solar ra
 ## Usage
 
 - Environment: MATLAB (requires `uifigure`; R2020b or later recommended)
-- Entry point: run `Run_GUI_v1_0_beta3` in MATLAB
+- Entry point: run `Run_GUI_v1_0_beta10` in MATLAB
 
 ```matlab
-Run_GUI_v1_0_beta3
+Run_GUI_v1_0_beta10
 ```
 
 ## Database Structure
@@ -35,7 +35,34 @@ Run_GUI_v1_0_beta3
 
 ## Changelog
 
-### v1.0-beta3 (current)
+### v1.0-beta10 (current)
+- Fixed the residual right-side yyaxis in the Preprocess top-right plot: the transform-validation plot no longer calls ResetAxesClean (which triggered yyaxis); it now clears the axes directly and draws with a single linear axis
+- The top-right plot now shows Raw reflectance / 100, Converted absorptance, and Prepared response
+- Calculation logic unchanged
+
+### v1.0-beta9
+- Fixed the v1.0-beta8 Preprocess error "unrecognized field OutputFolder"; debug export now uses `app.outputFolder`, falling back to a local `Result` folder when absent
+
+### v1.0-beta8
+- Preprocess top-right plot changed to Detector / absorber transform validation: Raw reflectance / 100, Converted absorptance = 1 − R/100, Prepared response
+- Summary tab adds a Transform Check section (Raw / Converted / Prepared min-max)
+- Preprocess stage auto-exports debug files (`Result/Debug_DetectorTransform_*.csv/txt`)
+
+### v1.0-beta7
+- Fixed the Detector / absorber preprocessing plot display logic; when the raw-data transform involves percent, the Raw curve is plotted as raw/100 (display only)
+- Calculation unchanged: `reflectance_percent_to_absorptance` still converts as 1 − R/100
+
+### v1.0-beta6
+- Preprocess plots now also rebuild the uiaxes before drawing, avoiding stale yyaxis residue
+- Unified the embedded-plot refresh logic across Preprocess / Calculate / Batch / Band stages
+
+### v1.0-beta5
+- Fixed GUI plot colors and stale yyaxis residue; the Batch page bottom-right view changed to a CSSE heatmap
+
+### v1.0-beta4
+- Fixed a MATLAB syntax error at v1.0-beta3 line 383 (a single-line `if` form not accepted by MATLAB R2022a)
+
+### v1.0-beta3
 - Display Panel tabs (Preprocess / Calculate / Batch / Band Contribution) now render correctly
 - Analysis Panel tabs (Summary / Batch Table / Band Table / Log) are pinned to the top and fill the right panel
 - Automatic switch to the corresponding Display tab at each workflow stage
